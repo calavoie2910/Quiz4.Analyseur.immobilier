@@ -13,6 +13,8 @@ import matplotlib.patches as mpatches
 import pandas as pd
 import numpy as np
 import seaborn as sns
+import plotly.express as px
+import math
 import streamlit as st
 from dotenv import load_dotenv
 
@@ -76,27 +78,26 @@ st.markdown(f"""
         color: {TEXT};
     }}
 
-    /* Fond principal : Dégradé sur image avec haut contraste */
+    /* Fond principal : Plus foncé et uni pour un rendu "Enterprise" */
     .stApp {{
-        background: linear-gradient(rgba(2, 6, 23, 0.80), rgba(2, 6, 23, 0.92)), 
+        background: linear-gradient(rgba(2, 6, 23, 0.90), rgba(2, 6, 23, 0.97)), 
                     {bg_css};
         background-attachment: fixed;
         background-size: cover;
         background-position: center;
     }}
 
-    /* === PERSONNALISATION DES BARRES DÉROULANTES (SCROLLBARS) === */
+    /* === PERSONNALISATION DES BARRES DÉROULANTES === */
     ::-webkit-scrollbar {{
-        width: 10px;
-        height: 10px;
+        width: 8px;
+        height: 8px;
     }}
     ::-webkit-scrollbar-track {{
-        background: rgba(2, 6, 23, 0.5);
+        background: rgba(2, 6, 23, 0.8);
     }}
     ::-webkit-scrollbar-thumb {{
-        background: linear-gradient(180deg, {PALETTE}, #10B981);
-        border-radius: 10px;
-        border: 2px solid rgba(2, 6, 23, 0.5);
+        background: {PALETTE};
+        border-radius: 4px;
     }}
     ::-webkit-scrollbar-thumb:hover {{
         background: {ACCENT};
@@ -105,55 +106,60 @@ st.markdown(f"""
     /* Style des barres de sélection (dropdowns) et inputs */
     div[data-testid="stSelectbox"] > div, div[data-testid="stMultiSelect"] > div {{
         background-color: {GLASS} !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 12px !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 6px !important;
         color: {TEXT} !important;
         font-weight: 500;
+        transition: border 0.2s ease;
+    }}
+    div[data-testid="stSelectbox"] > div:hover, div[data-testid="stMultiSelect"] > div:hover {{
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
     }}
     
-    /* Optimisation du contraste pour le texte dans les menus déroulants */
+    /* Marge intérieure des Popovers */
     div[data-baseweb="popover"] {{
         background: {DARK_BG} !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
     }}
     div[data-baseweb="select"] span {{
         color: {TEXT} !important;
     }}
     
-    /* Effet de verre premium pour les métriques */
+    /* Métriques : Structurées, carrées et minimalistes */
     div[data-testid="stMetric"] {{
-        background: {GLASS};
-        backdrop-filter: blur(20px);
-        padding: 20px !important;
-        border-radius: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-        transition: transform 0.3s ease;
+        background: rgba(15, 23, 42, 0.6);
+        padding: 16px 20px !important;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: all 0.2s ease;
     }}
     div[data-testid="stMetric"]:hover {{
-        transform: translateY(-5px);
-        border: 1px solid {PALETTE};
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(15, 23, 42, 0.8);
     }}
     
     [data-testid="stMetricValue"] {{
-        color: {ACCENT} !important;
-        font-weight: 800 !important;
-        font-size: 2.2rem !important;
+        color: {TEXT} !important;
+        font-weight: 700 !important;
+        font-size: 1.8rem !important;
     }}
     [data-testid="stMetricLabel"] {{
         color: {SUBTEXT} !important;
-        font-weight: 600 !important;
+        font-weight: 500 !important;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
+        font-size: 0.8rem !important;
     }}
 
-    /* Titres avec contraste saisissant */
+    /* Titres sobres et épurés */
     h1 {{
-        font-weight: 800 !important;
-        font-size: 3rem !important;
-        background: linear-gradient(to right, #FFFFFF, {SUBTEXT});
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 0.5rem !important;
+        font-weight: 700 !important;
+        font-size: 2.2rem !important;
+        color: {TEXT} !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem !important;
     }}
     
     h2, h3 {{
@@ -162,35 +168,33 @@ st.markdown(f"""
     }}
     
     .stSidebar {{
-        background-color: rgba(2, 6, 23, 0.95) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        background-color: rgba(2, 6, 23, 0.98) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
     }}
 
-    /* Boutons "Glass" Premium */
+    /* Boutons : Plats, fonctionnels et solides */
     .stButton>button {{
-        background: linear-gradient(135deg, {PALETTE}, #065F46) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        background-color: {PALETTE} !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
         color: white !important;
-        padding: 0.8rem 2.5rem !important;
-        border-radius: 12px !important;
-        font-weight: 700 !important;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+        padding: 0.6rem 2rem !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        text-transform: none;
+        letter-spacing: 0.2px;
+        transition: all 0.2s ease !important;
         width: 100%;
     }}
     .stButton>button:hover {{
-        transform: scale(1.02);
-        box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4) !important;
-        background: linear-gradient(135deg, #10B981, {PALETTE}) !important;
+        background-color: #047857 !important; /* Vert plus foncé au vol */
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
     }}
 
     /* Tables et Dataframes */
     div[data-testid="stExpander"] {{
-        background: {GLASS};
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
     }}
     
     /* Contraste élevé pour les textes secondaires */
@@ -275,7 +279,12 @@ st.sidebar.markdown("---")
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Onglet 1 — Exploration du marché", "Onglet 2 — Analyse de propriété"],
+    [
+        "Onglet 1 — Exploration du marché", 
+        "Onglet 2 — Analyse de propriété",
+        "Onglet 3 — Cartographie",
+        "Onglet 4 — Simulateur de rendement"
+    ],
     label_visibility="collapsed",
 )
 st.sidebar.markdown("---")
@@ -288,8 +297,8 @@ api_key = st.sidebar.text_input(
     help="Nécessaire pour les résumés IA. Laissez vide pour une réponse simulée.",
 )
 
-# Filtres Onglet 1
-if page == "Onglet 1 — Exploration du marché":
+# Filtres Onglet 1 et 3
+if page in ["Onglet 1 — Exploration du marché", "Onglet 3 — Cartographie"]:
     st.sidebar.subheader("Filtres")
 
     p_min, p_max = int(df_full["price"].min()), int(df_full["price"].max())
@@ -729,3 +738,124 @@ Cette propriété de **{int(prop['sqft_living']):,} pi²** ({int(prop['bedrooms'
 
 *Note : Ajoutez une clé OpenAI dans la barre latérale pour une recommandation IA complète.*"""
                 )
+
+# ═════════════════════════════════════════════════════════════════════════════
+# ONGLET 3 — Cartographie Interactive
+# ═════════════════════════════════════════════════════════════════════════════
+elif page == "Onglet 3 — Cartographie":
+    st.title("Onglet 3 — Cartographie Interactive")
+    st.caption("Visualisez la distribution spatiale des ventes dans le comté de King.")
+    
+    if df.empty:
+        st.warning("Aucune propriété ne correspond aux filtres actuels.")
+    else:
+        st.subheader("Carte des transactions immobilières")
+        
+        # Plotly Express Scatter Mapbox avec thème 'carto-darkmatter'
+        fig_map = px.scatter_mapbox(
+            df,
+            lat="lat",
+            lon="long",
+            color="price",
+            hover_name="id",
+            hover_data={"price": ":$,.0f", "bedrooms": True, "bathrooms": True, "sqft_living": True, "lat": False, "long": False},
+            color_continuous_scale=[DARK_BG, "#059669", "#10B981", "#F59E0B", "#EF4444"], # Dégradé clair
+            zoom=9.5,
+            center={"lat": 47.6, "lon": -122.2},
+            mapbox_style="carto-darkmatter",
+            height=800
+        )
+        
+        # Décoration Premium & Clarté des points
+        fig_map.update_traces(marker=dict(size=4.5, opacity=0.85))
+        fig_map.update_layout(
+            margin={"r":0, "t":0, "l":0, "b":0},
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color=TEXT,
+        )
+        
+        # Ajout d'une démarcation claire autour de la carte
+        st.markdown(
+            f"<div style='border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; "
+            f"overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.5); padding: 4px; "
+            f"background: {GLASS}; margin-bottom: 20px;'>", 
+            unsafe_allow_html=True
+        )
+        st.plotly_chart(fig_map, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        st.info("Utilisez la molette de votre souris ou les boutons sur la carte pour zoomer davantage au niveau des rues.")
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# ONGLET 4 — Simulateur de rendement
+# ═════════════════════════════════════════════════════════════════════════════
+elif page == "Onglet 4 — Simulateur de rendement":
+    st.title("Onglet 4 — Simulateur de financement")
+    st.caption("Évaluez la viabilité de votre investissement immobilier.")
+    
+    col_sim_1, col_sim_2 = st.columns([1, 2])
+    
+    with col_sim_1:
+        st.subheader("Paramètres du prêt")
+        st.markdown(f"<div style='background:{GLASS}; padding:20px; border-radius:15px; border:1px solid rgba(255,255,255,0.1); margin-bottom:20px;'>", unsafe_allow_html=True)
+        
+        prix_defaut = int(df["price"].mean()) if not df.empty else 500000
+        prix_achat = st.number_input("Prix d'achat ($)", min_value=10000, value=prix_defaut, step=10000)
+        
+        mise_de_fonds_pct = st.slider("Mise de fonds (%)", min_value=0, max_value=100, value=20, step=1)
+        mise_de_fonds = prix_achat * (mise_de_fonds_pct / 100)
+        
+        st.write(f"Montant de la mise de fonds : **${mise_de_fonds:,.0f}**")
+        
+        montant_pret = prix_achat - mise_de_fonds
+        
+        taux_interet = st.number_input("Taux d'intérêt annuel (%)", min_value=0.1, max_value=20.0, value=5.5, step=0.1)
+        duree_annees = st.selectbox("Durée du prêt (années)", [10, 15, 20, 25, 30], index=4)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+    with col_sim_2:
+        st.subheader("Analyse financière")
+        
+        # Calcul de la mensualité / math.pow
+        r = (taux_interet / 100) / 12  # Taux d'intérêt mensuel
+        n = duree_annees * 12  # Nombre de paiements (mois)
+        
+        if r > 0:
+            mensualite = montant_pret * (r * math.pow(1 + r, n)) / (math.pow(1 + r, n) - 1)
+        else:
+            mensualite = montant_pret / n
+            
+        total_paye = mensualite * n
+        total_interets = total_paye - montant_pret
+        
+        metric1, metric2, metric3 = st.columns(3)
+        metric1.metric("Paiement mensuel", f"${mensualite:,.0f}")
+        metric2.metric("Total des intérêts", f"${total_interets:,.0f}")
+        metric3.metric("Coût total d'acquisition", f"${(total_paye + mise_de_fonds):,.0f}")
+        
+        # Graphique Donut - Répartition
+        labels = ["Principal remboursé", "Intérêts"]
+        values = [montant_pret, total_interets]
+        
+        fig, ax = plt.subplots(figsize=(8, 4))
+        fig.patch.set_facecolor('none')
+        ax.set_facecolor('none')
+        
+        wedges, texts, autotexts = ax.pie(
+            values, 
+            labels=labels, 
+            autopct='%1.1f%%',
+            startangle=90, 
+            colors=[PALETTE, WARN],
+            wedgeprops=dict(width=0.4, edgecolor='none'), # Change to Donut Chart
+            textprops=dict(color=TEXT)
+        )
+        
+        plt.setp(autotexts, size=10, weight="bold")
+        ax.axis('equal')  
+        ax.set_title("Répartition du coût total du prêt", color=TEXT)
+        st.pyplot(fig)
+        plt.close(fig)
